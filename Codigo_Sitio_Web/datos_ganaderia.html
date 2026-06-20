@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Monitoreo Histórico del Ganado</title>
+
+<link rel="icon" type="image/svg+xml"
+href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTIiIGZpbGw9IiMyMkM1NUUiLz48dGV4dCB4PSIyMCIgeT0iMzgiIGZvbnQtc2l6ZT0iMjYiIGZpbGw9IndoaXRlIiBmb250LXdlaWdodD0iOTAwIj5JT1Q8L3RleHQ+PC9zdmc+">
+
+<style>
+
+  :root{
+  --panel:#020617;
+  --muted:#94a3b8;
+  --accent:#22c55e;
+  --shadow:0 10px 30px rgba(0,0,0,.4);
+  }
+
+  body{
+    margin:0;
+    font-family:system-ui,Segoe UI,Roboto,Arial;
+    color:#e5e7eb;
+
+  background-image:
+    linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.65)),
+    url("https://i.pinimg.com/1200x/ab/f6/f4/abf6f4ddd1eb23635c95cebebd3746a4.jpg");
+
+  background-size:cover;
+  background-position:center;
+  background-attachment:fixed;
+}
+
+  .wrap{max-width:1100px;margin:18px auto 32px;padding:0 16px;}
+
+  header{
+    background:var(--panel);
+    border-radius:14px 14px 0 0;
+    padding:14px 18px;
+    box-shadow:var(--shadow);
+  }
+
+  .title{
+    font-size:clamp(20px,4vw,28px);
+    font-weight:900;
+    margin:0;
+  }
+
+  nav{
+    display:flex;
+    gap:16px;
+    margin-top:6px;
+  }
+
+  nav a{
+    color:var(--muted);
+    text-decoration:none;
+    font-weight:700;
+  }
+
+  nav a.active{color:var(--accent);}
+  nav a:hover{color:white;}
+
+  main{
+    background:#020617;
+    border-radius:0 0 14px 14px;
+    box-shadow:var(--shadow);
+    padding:18px;
+  }
+
+  #estadoWS{
+    text-align:right;
+    font-size:13px;
+    margin-bottom:10px;
+  }
+
+  table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:14px;
+  }
+
+  thead{
+    background:#16a34a;
+    color:white;
+  }
+
+  th, td{
+    padding:10px;
+    text-align:center;
+  }
+
+  tbody tr:nth-child(odd){background:#020617;}
+  tbody tr:nth-child(even){background:#020617;}
+  tbody tr:hover{background:#022c22;}
+
+  footer{
+    text-align:center;
+    margin:12px 0;
+    font-size:13px;
+    color:var(--muted);
+  }
+</style>
+</head>
+
+<body>
+
+<div class="wrap">
+  <header>
+    <h1 class="title">🐄 Monitoreo Histórico del Ganado</h1>
+    <nav>
+      <a href="ganaderia.html">Inicio</a>
+      <a href="datos_ganaderia.html" class="active">Datos</a>
+      <a href="gps.html">GPS</a>
+    </nav>
+  </header>
+
+  <main>
+    <div id="estadoWS">Conectando…</div>
+
+    <table id="tablaDatos">
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>ID Vaca</th>
+          <th>Temperatura (°C)</th>
+          <th>Frecuencia (bpm)</th>
+          <th>Actividad</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td colspan="5">Esperando datos…</td></tr>
+      </tbody>
+    </table>
+  </main>
+</div>
+
+<footer>Proyecto IoT · Ganadería Inteligente 🐄</footer>
+
+<script>
+// ================= CONFIG WS =================
+const ws = new WebSocket("ws://YOUR_SERVER_IP:PORT");
+const tabla = document.querySelector("#tablaDatos tbody");
+const estadoWS = document.getElementById("estadoWS");
+
+let registros = []; // últimos 15
+
+ws.onopen = () => {
+  estadoWS.textContent = "🟢 Conectado";
+  estadoWS.style.color = "#22c55e";
+};
+
+ws.onclose = () => {
+  estadoWS.textContent = "🔴 Desconectado · Reintentando…";
+  estadoWS.style.color = "#ef4444";
+  setTimeout(() => location.reload(), 5000);
+};
+
+ws.onerror = () => {
+  estadoWS.textContent = "❌ Error WebSocket";
+  estadoWS.style.color = "#ef4444";
+};
+
+ws.onmessage = (e) => {
+  try {
+    const d = JSON.parse(e.data);
+
+    if (d.temp !== undefined && d.hr !== undefined && d.activity !== undefined) {
+      const fecha = new Date(d.ts || Date.now());
+      const fechaStr =
+        fecha.toLocaleDateString("es-ES") + " " +
+        fecha.toLocaleTimeString("es-ES");
+
+      registros.unshift({
+        fecha: fechaStr,
+        id: d.cow_id ?? "--",
+        temp: d.temp,
+        hr: d.hr,
+        act: d.activity
+      });
+
+      if (registros.length > 15) registros.pop();
+      renderTabla();
+    }
+  } catch (err) {
+    console.error("WS inválido:", err);
+  }
+};
+
+function renderTabla() {
+  tabla.innerHTML = "";
+  registros.forEach(r => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${r.fecha}</td>
+      <td>${r.id}</td>
+      <td>${r.temp.toFixed(2)}</td>
+      <td>${r.hr}</td>
+      <td>${r.act.toFixed(1)}</td>
+    `;
+    tabla.appendChild(tr);
+  });
+}
+</script>
+</body>
+</html>

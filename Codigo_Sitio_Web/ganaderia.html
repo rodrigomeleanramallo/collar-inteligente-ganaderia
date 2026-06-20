@@ -1,0 +1,611 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AgroIoT · Ganadería</title>
+
+<!-- Favicon embebido (sin archivo) -->
+<link rel="icon" type="image/svg+xml"
+href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTIiIGZpbGw9IiMyMkM1NUUiLz48dGV4dCB4PSIyMCIgeT0iMzgiIGZvbnQtc2l6ZT0iMjYiIGZvbnQtZmFtaWx5PSJBcmlhbCwgSGVsdmV0aWNhLCBzYW5zLXNlcmlmIiBmb250LXdlaWdodD0iOTAwIiBmaWxsPSJ3aGl0ZSI+SW9UPC90ZXh0PjxwYXRoIGQ9Ik00NCAzMGM0IDIgNCA2IDAgOCIgc3Ryb2tlPSIjOUFGNTg2IiBzdHJva2Utd2lkdGg9IjMiIGZpbGw9Im5vbmUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjxwYXRoIGQ9Ik00OCAyOGM2IDQgNiAxMCAwIDE0IiBzdHJva2U9IiM5QUY1ODYiIHN0cm9rZS13aWR0aD0iMyIgZmlsbD0ibm9uZSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PC9zdmc+">
+
+<style>
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#111;color:#fff}
+
+  :root{
+    --bg-url: url("https://i.pinimg.com/1200x/ab/f6/f4/abf6f4ddd1eb23635c95cebebd3746a4.jpg");
+  }
+
+  .hero{
+    position:relative;
+    min-height:100vh;
+    background-image:var(--bg-url);
+    background-size:cover;
+    background-position:center;
+    background-repeat:no-repeat;
+    filter: brightness(1.12) contrast(1.05);
+    padding: 18px 14px 28px;
+  }
+
+  .overlay{
+    position:absolute; inset:0;
+    background: linear-gradient(
+      180deg,
+      rgba(0,0,0,0.25) 0%,
+      rgba(0,0,0,0.35) 50%,
+      rgba(0,0,0,0.45) 100%
+    );
+  }
+
+  .wrap{
+    position:relative; z-index:1;
+    width:min(1400px, 100%);
+    margin:0 auto;
+  }
+
+  .topbar{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:12px;
+    padding: 8px 4px 14px;
+  }
+
+  .title{
+    margin:0;
+    font-size: clamp(22px, 3vw, 34px);
+    font-weight: 900;
+    text-shadow: 0 6px 18px rgba(0,0,0,.35);
+  }
+
+  .subtitle{
+    margin:6px 0 0;
+    opacity:.92;
+    text-shadow: 0 4px 14px rgba(0,0,0,.35);
+    font-size: 14px;
+  }
+
+  .status-pill{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: rgba(0,0,0,0.35);
+    border: 1px solid rgba(255,255,255,0.18);
+    backdrop-filter: blur(6px);
+    min-width: 260px;
+  }
+
+  .dot{
+    width:10px;height:10px;border-radius:50%;
+    background:#f59e0b; /* naranja = conectando */
+    box-shadow: 0 0 0 6px rgba(245,158,11,0.18);
+  }
+
+  .pill-text{line-height:1.2}
+  .pill-text b{display:block;font-size:13px}
+  .pill-text span{font-size:12px;opacity:.9}
+
+  .grid{
+    display:grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .card{
+    background: rgba(17,17,17,0.75);
+    border: 1px solid rgba(255,255,255,0.14);
+    border-radius: 14px;
+    padding: 12px;
+    box-shadow: 0 14px 40px rgba(0,0,0,.35);
+    backdrop-filter: blur(8px);
+    min-height: 240px;
+  }
+
+  .card h3{
+    margin: 2px 0 8px;
+    font-size: 14px;
+    font-weight: 800;
+    color: #38bdf8;
+  }
+
+  .card .sub{
+    margin:0 0 10px;
+    font-size: 12px;
+    opacity: .9;
+  }
+
+  /* Gauges */
+  .gauge-wrap{
+    display:grid;
+    grid-template-columns: 180px 1fr;
+    gap: 10px;
+    align-items:center;
+  }
+
+  .gauge{
+    --pct: 0;            /* 0..1 */
+    --col: #f59e0b;      /* color */
+    width: 170px;
+    height: 170px;
+    border-radius: 50%;
+    background:
+      conic-gradient(var(--col) calc(var(--pct) * 180deg), rgba(255,255,255,0.14) 0);
+    position: relative;
+    overflow:hidden;
+  }
+
+  /* recorta a semicírculo */
+  .gauge::after{
+    content:"";
+    position:absolute;
+    inset: 14px;
+    background: rgba(17,17,17,0.95);
+    border-radius: 50%;
+  }
+  .gauge::before{
+    content:"";
+    position:absolute;
+    left:-10%;
+    right:-10%;
+    bottom:-55%;
+    height: 60%;
+    background: rgba(17,17,17,0.95);
+    z-index: 2;
+  }
+
+  .gauge-center{
+    position:absolute;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-direction:column;
+    z-index: 3;
+    transform: translateY(12px);
+  }
+
+  .value{
+    font-size: 26px;
+    font-weight: 900;
+  }
+  .unit{
+    font-size: 12px;
+    opacity:.9;
+  }
+
+  .mini{
+    font-size: 12px;
+    opacity: .9;
+    line-height: 1.35;
+  }
+  .mini b{font-weight:800}
+
+  .chart-title{
+    margin: 8px 0 8px;
+    font-size: 12px;
+    font-weight: 800;
+    opacity:.95;
+  }
+
+  canvas{
+    width:100% !important;
+    height: 180px !important;
+    background: rgba(0,0,0,0.18);
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.10);
+  }
+
+  /* Estado card */
+  .state-row{
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+    padding: 10px 10px;
+    border-radius: 12px;
+    background: rgba(0,0,0,0.22);
+    border: 1px solid rgba(255,255,255,0.10);
+    margin-top: 8px;
+    font-size: 12px;
+  }
+
+  .btn{
+    margin-top: 12px;
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.20);
+    background: rgba(56,189,248,0.18);
+    color: #fff;
+    font-weight: 800;
+    cursor: pointer;
+  }
+  .btn:hover{ filter: brightness(1.05); }
+
+  .back{
+    text-decoration:none;
+    color:#fff;
+    padding: 10px 14px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.22);
+    backdrop-filter: blur(6px);
+    font-weight: 800;
+  }
+
+  @media (max-width: 1200px){
+    .grid{ grid-template-columns: repeat(2, minmax(0,1fr)); }
+  }
+  @media (max-width: 720px){
+    .topbar{flex-direction:column; align-items:flex-start}
+    .status-pill{min-width: unset; width:100%}
+    .grid{ grid-template-columns: 1fr; }
+    .gauge-wrap{ grid-template-columns: 1fr; justify-items:center; }
+  }
+</style>
+
+<!-- Chart.js (CDN) -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+
+<body>
+<main class="hero">
+  <div class="overlay"></div>
+
+  <div class="wrap">
+    <div class="topbar">
+      <div>
+        <h1 class="title">🐄 Proyecto Ganadería</h1>
+        <p class="subtitle">Dashboard Web: temperatura, frecuencia y actividad.</p>
+      </div>
+
+      <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+        <a class="back" href="index.html">⬅ Volver</a>
+        <a class="back" href="gps.html">🗺️ Ver GPS</a>
+        <a class="back" href="datos_ganaderia.html">Datos</a>
+
+        <div class="status-pill">
+          <div id="dot" class="dot"></div>
+          <div class="pill-text">
+            <b id="connTitle">Conectando…</b>
+            <span id="connMsg">Esperando datos…</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <section class="grid">
+      <!-- Temp -->
+      <div class="card">
+        <h3>Temperatura corporal</h3>
+        <p class="sub">Temp. corp.</p>
+
+        <div class="gauge-wrap">
+          <div class="gauge" id="gTemp" style="--col:#f59e0b; --pct:0.0;">
+            <div class="gauge-center">
+              <div class="value" id="vTemp">--</div>
+              <div class="unit">°C</div>
+            </div>
+          </div>
+
+          <div class="mini">
+            <div><b>Rango:</b> 34–42 °C</div>
+            <div><b>Alerta:</b> &gt; 40.5 °C</div>
+            <div><b>Último:</b> <span id="tTemp">--</span></div>
+          </div>
+        </div>
+
+        <div class="chart-title">Gráfica de Temperatura</div>
+        <canvas id="cTemp"></canvas>
+      </div>
+
+      <!-- HR -->
+      <div class="card">
+        <h3>Frecuencia cardiaca</h3>
+        <p class="sub">Latidos por minuto</p>
+
+        <div class="gauge-wrap">
+          <div class="gauge" id="gHR" style="--col:#facc15; --pct:0.0;">
+            <div class="gauge-center">
+              <div class="value" id="vHR">--</div>
+              <div class="unit">bpm</div>
+            </div>
+          </div>
+
+          <div class="mini">
+            <div><b>Rango:</b> 40–160 bpm</div>
+            <div><b>Alerta:</b> &gt; 140 bpm</div>
+            <div><b>Último:</b> <span id="tHR">--</span></div>
+          </div>
+        </div>
+
+        <div class="chart-title">Gráfica de Frecuencia</div>
+        <canvas id="cHR"></canvas>
+      </div>
+
+      <!-- Activity -->
+      <div class="card">
+        <h3>Actividad física</h3>
+        <p class="sub">Actividad</p>
+
+        <div class="gauge-wrap">
+          <div class="gauge" id="gAct" style="--col:#ef4444; --pct:0.0;">
+            <div class="gauge-center">
+              <div class="value" id="vAct">--</div>
+              <div class="unit">u</div>
+            </div>
+          </div>
+
+          <div class="mini">
+            <div><b>Rango:</b> 0–25</div>
+            <div><b>Alerta:</b> &gt; 20</div>
+            <div><b>Último:</b> <span id="tAct">--</span></div>
+          </div>
+        </div>
+
+        <div class="chart-title">Gráfica de Aceleración</div>
+        <canvas id="cAct"></canvas>
+      </div>
+
+      <!-- Estado -->
+      <div class="card">
+        <h3>Estado</h3>
+        <p class="sub">Resumen</p>
+
+        <div class="state-row">
+          <span>Actividad física</span>
+          <b id="sAct">--</b>
+        </div>
+
+        <div class="state-row">
+          <span>Movimiento rápido</span>
+          <b id="sFast">--</b>
+        </div>
+
+        <div class="state-row">
+          <span>Última actualización</span>
+          <b id="sLast">--</b>
+        </div>
+
+        <button class="btn" id="btnClear">LIMPIAR GRÁFICOS</button>
+      </div>
+    </section>
+  </div>
+</main>
+
+<script>
+/* =========================
+   CONFIG WEBSOCKET
+========================= */
+// 👉 Cambia esta URL por tu WebSocket real:
+const WS_URL = "ws://YOUR_SERVER_IP:PORT";
+
+// Cuántos puntos mantener en cada gráfica
+const MAX_POINTS = 60;
+
+/* =========================
+   UI helpers
+========================= */
+const el = (id) => document.getElementById(id);
+const dot = el("dot");
+const connTitle = el("connTitle");
+const connMsg = el("connMsg");
+
+function setConn(state, msg){
+  // state: "connecting" | "open" | "closed" | "error"
+  const map = {
+    connecting: { color:"#f59e0b", ring:"rgba(245,158,11,0.18)", title:"Conectando…" },
+    open:       { color:"#22c55e", ring:"rgba(34,197,94,0.18)",  title:"Conectado" },
+    closed:     { color:"#ef4444", ring:"rgba(239,68,68,0.18)",  title:"Desconectado" },
+    error:      { color:"#ef4444", ring:"rgba(239,68,68,0.18)",  title:"Error" }
+  }[state];
+
+  dot.style.background = map.color;
+  dot.style.boxShadow = `0 0 0 6px ${map.ring}`;
+  connTitle.textContent = map.title;
+  connMsg.textContent = msg || "";
+}
+
+function fmtTime(ts){
+  const d = ts ? new Date(ts) : new Date();
+  const hh = String(d.getHours()).padStart(2,"0");
+  const mm = String(d.getMinutes()).padStart(2,"0");
+  const ss = String(d.getSeconds()).padStart(2,"0");
+  return `${hh}:${mm}:${ss}`;
+}
+
+/* =========================
+   Gauges (0..1)
+========================= */
+function setGauge(gaugeId, valueId, timeId, value, min, max, unitText){
+  const g = el(gaugeId);
+  const v = el(valueId);
+  const t = el(timeId);
+
+  if (value === null || value === undefined || Number.isNaN(value)){
+    v.textContent = "--";
+    t.textContent = "--";
+    g.style.setProperty("--pct", 0);
+    return;
+  }
+
+  v.textContent = `${value}`;
+  t.textContent = fmtTime();
+
+  const clamped = Math.max(min, Math.min(max, value));
+  const pct = (clamped - min) / (max - min); // 0..1
+  g.style.setProperty("--pct", pct.toFixed(4));
+}
+
+/* =========================
+   Charts
+========================= */
+function makeLineChart(canvasId, label){
+  const ctx = el(canvasId).getContext("2d");
+  return new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: [],
+      datasets: [{
+        label,
+        data: [],
+        tension: 0.25,
+        borderWidth: 2,
+        pointRadius: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: false,
+      plugins: {
+        legend: { display: false }
+      },
+      scales: {
+        x: { ticks: { color: "rgba(255,255,255,0.7)" }, grid: { color: "rgba(255,255,255,0.08)" } },
+        y: { ticks: { color: "rgba(255,255,255,0.7)" }, grid: { color: "rgba(255,255,255,0.08)" } }
+      }
+    }
+  });
+}
+
+const chTemp = makeLineChart("cTemp", "Temp (°C)");
+const chHR   = makeLineChart("cHR",   "HR (bpm)");
+const chAct  = makeLineChart("cAct",  "Actividad");
+
+function pushPoint(chart, xLabel, yValue){
+  chart.data.labels.push(xLabel);
+  chart.data.datasets[0].data.push(yValue);
+
+  if (chart.data.labels.length > MAX_POINTS){
+    chart.data.labels.shift();
+    chart.data.datasets[0].data.shift();
+  }
+  chart.update();
+}
+
+function clearCharts(){
+  [chTemp, chHR, chAct].forEach(ch => {
+    ch.data.labels = [];
+    ch.data.datasets[0].data = [];
+    ch.update();
+  });
+}
+
+/* =========================
+   Data handling
+========================= */
+/*
+  Mensaje esperado por WebSocket (JSON):
+  {
+    "ts": 1730000000000,         // opcional: timestamp ms
+    "temp": 40.2,                // °C
+    "hr": 90,                    // bpm
+    "activity": 18.6,            // 0..25 (o tu escala)
+    "status": {
+      "actividad_fisica": "Media",   // texto
+      "mov_rapido": "No"             // texto
+    }
+  }
+*/
+function handlePayload(p){
+  const ts = p.ts || Date.now();
+  const labelX = fmtTime(ts);
+
+  const temp = Number(p.temp);
+  const hr   = Number(p.hr);
+  const act  = Number(p.activity);
+
+  // Gauges
+  setGauge("gTemp", "vTemp", "tTemp", +temp.toFixed(2), 34, 42);
+  setGauge("gHR",   "vHR",   "tHR",   Math.round(hr),   40, 160);
+  setGauge("gAct",  "vAct",  "tAct",  +act.toFixed(1),  0,  25);
+
+  // Charts
+  if (!Number.isNaN(temp)) pushPoint(chTemp, labelX, temp);
+  if (!Number.isNaN(hr))   pushPoint(chHR,   labelX, hr);
+  if (!Number.isNaN(act))  pushPoint(chAct,  labelX, act);
+
+  // Estado
+  el("sAct").textContent  = p.status?.actividad_fisica ?? "--";
+  el("sFast").textContent = p.status?.mov_rapido ?? "--";
+  el("sLast").textContent = fmtTime(ts);
+
+  setConn("open", `Último dato: ${labelX}`);
+}
+
+/* =========================
+   WebSocket with reconnect
+========================= */
+let ws = null;
+let retryMs = 1000;
+
+function connect(){
+  setConn("connecting", `Conectando a ${WS_URL}…`);
+
+  try{
+    ws = new WebSocket(WS_URL);
+
+    ws.onopen = () => {
+      retryMs = 1000;
+      setConn("open", "Conectado. Esperando datos…");
+    };
+
+    ws.onmessage = (ev) => {
+      try{
+        const p = JSON.parse(ev.data);
+        handlePayload(p);
+      }catch(e){
+        setConn("error", "Mensaje no es JSON válido");
+      }
+    };
+
+    ws.onclose = () => {
+      setConn("closed", `Reintentando en ${Math.round(retryMs/1000)}s…`);
+      setTimeout(connect, retryMs);
+      retryMs = Math.min(retryMs * 2, 15000);
+    };
+
+    ws.onerror = () => {
+      // onclose se disparará después normalmente
+      setConn("error", "Error de WebSocket");
+    };
+
+  }catch(e){
+    setConn("error", "No se pudo crear WebSocket");
+    setTimeout(connect, 3000);
+  }
+}
+
+// Botón limpiar
+el("btnClear").addEventListener("click", () => {
+  clearCharts();
+  el("sLast").textContent = "--";
+  connMsg.textContent = "Gráficas limpiadas";
+});
+
+// Conectar al cargar
+connect();
+
+/* =========================
+   MODO DEMO (opcional)
+   Si quieres probar sin WS, descomenta esto:
+========================= */
+// setInterval(() => {
+//   const demo = {
+//     ts: Date.now(),
+//     temp: 38 + Math.random()*3,
+//     hr: 70 + Math.random()*50,
+//     activity: Math.random()*25,
+//     status: {
+//       actividad_fisica: ["Baja","Media","Alta"][Math.floor(Math.random()*3)],
+//       mov_rapido: Math.random() > 0.7 ? "Sí" : "No"
+//     }
+//   };
+//   handlePayload(demo);
+// }, 1000);
+</script>
+</body>
+</html>

@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>AgroIoT · GPS Ganado</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Favicon -->
+<link rel="icon" type="image/svg+xml"
+href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTIiIGZpbGw9IiMyMkM1NUUiLz48dGV4dCB4PSIyMCIgeT0iMzgiIGZvbnQtc2l6ZT0iMjYiIGZvbnQtZmFtaWx5PSJBcmlhbCwgSGVsdmV0aWNhLCBzYW5zLXNlcmlmIiBmb250LXdlaWdodD0iOTAwIiBmaWxsPSJ3aGl0ZSI+SW9UPC90ZXh0PjxwYXRoIGQ9Ik00NCAzMGM0IDIgNCA2IDAgOCIgc3Ryb2tlPSIjOUFGNTg2IiBzdHJva2Utd2lkdGg9IjMiIGZpbGw9Im5vbmUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjxwYXRoIGQ9Ik00OCAyOGM2IDQgNiAxMCAwIDE0IiBzdHJva2U9IiM5QUY1ODYiIHN0cm9rZS13aWR0aD0iMyIgZmlsbD0ibm9uZSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PC9zdmc+">
+
+<!-- Leaflet -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<style>
+  html, body {
+    height: 100%;
+    margin: 0;
+    font-family: system-ui, Arial, sans-serif;
+    background: #0f172a;
+    color: #fff;
+  }
+
+  header {
+    padding: 12px 16px;
+    background: #020617;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+
+  header h1 {
+    margin: 0;
+    font-size: 18px;
+  }
+
+  #status {
+    font-size: 13px;
+    opacity: 0.85;
+  }
+
+  #map {
+    height: calc(100% - 64px);
+    width: 100%;
+  }
+  #btnVolver {
+    margin-top: 8px;
+    padding: 6px 12px;
+    background: #16a34a;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+
+  #btnVolver:hover {
+    background: #15803d;
+  }
+
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>🐄 GPS Ganadería Inteligente</h1>
+  <div id="status">Conectando al servidor…</div>
+  <button id="btnVolver">⬅ Volver</button>
+</header>
+
+<div id="map"></div>
+
+<script>
+/* =========================
+   CONFIGURACIÓN
+========================= */
+
+// 🔴 CAMBIA ESTA URL
+const WS_URL = "ws://YOUR_SERVER_IP:PORT";
+
+// Vista inicial del mapa
+const MAP_CENTER = [-17.3895, -66.1568];
+const MAP_ZOOM = 16;
+
+/* =========================
+   MAPA
+========================= */
+
+const map = L.map("map").setView(MAP_CENTER, MAP_ZOOM);
+
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  maxZoom: 19,
+  attribution: "© OpenStreetMap"
+}).addTo(map);
+
+/* =========================
+   ICONO DE VACA
+========================= */
+
+const cowIcon = L.icon({
+  iconUrl: "https://em-content.zobj.net/source/facebook/65/cow_1f404.png",
+  iconSize: [40, 40],       // tamaño del icono
+  iconAnchor: [20, 40],     // punto que toca el suelo
+  popupAnchor: [0, -40]     // posición del popup
+});
+
+
+// Marcadores por vaca
+const markers = {};
+
+/* =========================
+   UI
+========================= */
+
+const statusEl = document.getElementById("status");
+
+function setStatus(text, ok = false) {
+  statusEl.textContent = text;
+  statusEl.style.color = ok ? "#22c55e" : "#facc15";
+}
+
+function fmtTime(ts) {
+  const d = new Date(ts || Date.now());
+  return d.toLocaleTimeString();
+}
+
+/* =========================
+   WEBSOCKET
+========================= */
+
+let ws;
+let retry = 1000;
+
+function connectWS() {
+  setStatus("Conectando al WebSocket…");
+
+  ws = new WebSocket(WS_URL);
+
+  ws.onopen = () => {
+    retry = 1000;
+    setStatus("Conectado · Esperando datos GPS", true);
+  };
+
+  ws.onmessage = (ev) => {
+    try {
+      const p = JSON.parse(ev.data);
+      handleGPS(p);
+    } catch (e) {
+      console.error("Mensaje inválido:", ev.data);
+    }
+  };
+
+  ws.onclose = () => {
+    setStatus(`Desconectado · Reintentando en ${retry/1000}s`);
+    setTimeout(connectWS, retry);
+    retry = Math.min(retry * 2, 15000);
+  };
+
+  ws.onerror = () => {
+    setStatus("Error de conexión WebSocket");
+  };
+}
+
+/* =========================
+   MANEJO DE DATOS GPS
+========================= */
+/*
+Mensaje esperado:
+{
+  "ts": 1730000000000,
+  "cow_id": 12,
+  "lat": -17.3895,
+  "lon": -66.1568,
+  "speed": 1.2,
+  "status": "Moviendo"
+}
+*/
+
+function handleGPS(p) {
+  if (p.lat == null || p.lon == null) return;
+
+  const id = p.cow_id ?? "desconocido";
+  const pos = [p.lat, p.lon];
+
+  if (!markers[id]) {
+    markers[id] = L.marker(pos, { icon: cowIcon }).addTo(map);
+  } else {
+    markers[id].setLatLng(pos);
+  }
+
+  markers[id].bindPopup(`
+    <b>Vaca ${id}</b><br>
+    Hora: ${fmtTime(p.ts)}
+  `);
+
+  map.panTo(pos, { animate: true });
+}
+
+document.getElementById("btnVolver").onclick = () => {
+  window.location.href = "ganaderia.html";
+};
+
+/* =========================
+   INICIAR
+========================= */
+
+connectWS();
+</script>
+
+</body>
+</html>

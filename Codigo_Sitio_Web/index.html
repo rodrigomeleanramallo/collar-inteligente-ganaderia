@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>AgroIoT</title>
+
+<link rel="icon" type="image/svg+xml"
+href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTIiIGZpbGw9IiMyMkM1NUUiLz48dGV4dCB4PSIyMCIgeT0iMzgiIGZvbnQtc2l6ZT0iMjYiIGZvbnQtZmFtaWx5PSJBcmlhbCwgSGVsdmV0aWNhLCBzYW5zLXNlcmlmIiBmb250LXdlaWdodD0iOTAwIiBmaWxsPSJ3aGl0ZSI+SW9UPC90ZXh0PjxwYXRoIGQ9Ik00NCAzMGM0IDIgNCA2IDAgOCIgc3Ryb2tlPSIjOUFGNTg2IiBzdHJva2Utd2lkdGg9IjMiIGZpbGw9Im5vbmUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjxwYXRoIGQ9Ik00OCAyOGM2IDQgNiAxMCAwIDE0IiBzdHJva2U9IiM5QUY1ODYiIHN0cm9rZS13aWR0aD0iMyIgZmlsbD0ibm9uZSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PC9zdmc+">
+
+<style>
+/* =====================
+   RESET Y BASE
+===================== */
+* { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  color: #fff;
+}
+
+/* =====================
+   CONFIGURACIÓN GLOBAL
+===================== */
+:root {
+  /* 👇 CAMBIA ESTA URL POR TU IMAGEN DE FONDO */
+  --bg-url: url("https://i.pinimg.com/1200x/ab/f6/f4/abf6f4ddd1eb23635c95cebebd3746a4.jpg");
+}
+
+/* =====================
+   HERO
+===================== */
+.hero {
+  position: relative;
+  min-height: 100vh;
+
+  background-image: var(--bg-url);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  filter: brightness(1.12) contrast(1.05);
+
+  display: grid;
+  place-items: center;
+  padding: 32px 16px;
+}
+
+/* Overlay suave */
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(0,0,0,0.25) 0%,
+    rgba(0,0,0,0.35) 50%,
+    rgba(0,0,0,0.45) 100%
+  );
+}
+
+
+/* =====================
+   CONTENIDO
+===================== */
+.content {
+  position: relative;
+  z-index: 1;
+  width: min(980px, 100%);
+  text-align: center;
+}
+
+/* Logo */
+.logo {
+  margin: 0;
+  font-size: clamp(44px, 6vw, 84px);
+  font-weight: 900;
+  letter-spacing: -1px;
+  text-shadow: 0 6px 18px rgba(0,0,0,0.35);
+}
+
+.logo span {
+  color: #7CFF6B;
+}
+
+.wifi {
+  font-size: 0.45em;
+  margin-left: 6px;
+  display: inline-block;
+  transform: rotate(-10deg);
+}
+
+/* Subtítulo */
+.tagline {
+  margin: 12px auto 0;
+  max-width: 760px;
+  font-size: clamp(16px, 2.2vw, 22px);
+  line-height: 1.35;
+  text-shadow: 0 4px 14px rgba(0,0,0,0.35);
+}
+
+/* =====================
+   BOTONES
+===================== */
+.buttons {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px;
+  margin-top: 28px;
+}
+
+.card-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+
+  padding: 26px 18px;
+  border-radius: 18px;
+
+  text-decoration: none;
+  color: #fff;
+
+  font-weight: 800;
+  font-size: clamp(18px, 2.5vw, 28px);
+
+  box-shadow:
+    0 10px 25px rgba(0,0,0,0.25),
+    inset 0 0 0 2px rgba(255,255,255,0.25);
+
+  transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
+}
+
+.card-btn:hover {
+  transform: translateY(-3px);
+  filter: brightness(1.05);
+}
+
+.bee {
+  background: linear-gradient(180deg, #F4B000 0%, #D98C00 100%);
+}
+
+.cow {
+  background: linear-gradient(180deg, #16A34A 0%, #0B7A36 100%);
+}
+
+.icon {
+  font-size: 1.2em;
+}
+
+/* =====================
+   FOOTER
+===================== */
+.footer {
+  margin-top: 26px;
+  opacity: 0.85;
+}
+
+/* =====================
+   RESPONSIVE
+===================== */
+@media (max-width: 720px) {
+  .buttons {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<main class="hero">
+  <div class="overlay"></div>
+
+  <section class="content">
+    <h1 class="logo">
+      Agro<span>IoT</span><span class="wifi">)))</span>
+    </h1>
+
+    <p class="tagline">
+      Plataforma de monitoreo inteligente para sistemas agropecuarios
+    </p>
+
+    <div class="buttons">
+      <a class="card-btn bee" href="apicultura.html">
+        <span class="icon">🐝</span>
+        Proyecto Apicultura
+      </a>
+
+      <a class="card-btn cow" href="ganaderia.html">
+        <span class="icon">🐄</span>
+        Proyecto Ganadería
+      </a>
+    </div>
+
+    <div class="footer">
+      <small>© 2026 AgroIoT</small>
+    </div>
+  </section>
+</main>
+
+</body>
+</html>
+
